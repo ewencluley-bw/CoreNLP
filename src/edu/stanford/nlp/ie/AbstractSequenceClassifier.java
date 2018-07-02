@@ -655,6 +655,53 @@ public abstract class AbstractSequenceClassifier<IN extends CoreMap> implements 
     return entities;
   }
 
+  public List<Quadruple<String, Integer, Integer, Double>> classifyToCharacterOffsetsWithConfidenceScore(String sentences) {
+    ObjectBank<List<IN>> documents =
+            makeObjectBankFromString(sentences, plainTextReaderAndWriter());
+
+    List<Quadruple<String, Integer, Integer, Double>> entities = new ArrayList<>();
+    for (List<IN> doc : documents) {
+      String prevEntityType = flags.backgroundSymbol;
+      Quadruple<String, Integer, Integer, Double> prevEntity = null;
+
+      classify(doc);
+
+      for (IN fl : doc) {
+        String guessedAnswer = fl.get(CoreAnnotations.AnswerAnnotation.class);
+        if (guessedAnswer.equals(flags.backgroundSymbol)) {
+          if (prevEntity != null) {
+            entities.add(prevEntity);
+            prevEntity = null;
+          }
+        } else {
+          if (!guessedAnswer.equals(prevEntityType)) {
+            if (prevEntity != null) {
+              entities.add(prevEntity);
+            }
+            prevEntity = new Quadruple<>(guessedAnswer,
+                    fl.get(CoreAnnotations.CharacterOffsetBeginAnnotation.class),
+                    fl.get(CoreAnnotations.CharacterOffsetEndAnnotation.class),
+                    fl.get(CoreAnnotations.ProbabilityScoreAnnotation.class));
+          } else {
+            assert prevEntity != null; // if you read the code carefully, this
+            // should always be true!
+            prevEntity.setThird(fl.get(CoreAnnotations.CharacterOffsetEndAnnotation.class));
+            double newProb = prevEntity.fourth * fl.get(CoreAnnotations.ProbabilityScoreAnnotation.class);
+            prevEntity.setFourth(newProb);
+          }
+        }
+        prevEntityType = guessedAnswer;
+      }
+
+      // include any entity at end of doc
+      if (prevEntity != null) {
+        entities.add(prevEntity);
+      }
+
+    }
+    return entities;
+  }
+
   /**
    * Have a word segmenter segment a String into a list of words.
    * ONLY USE IF YOU LOADED A CHINESE WORD SEGMENTER!!!!!
