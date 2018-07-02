@@ -2130,6 +2130,15 @@ public class CoreAnnotations {
     public Class<Boolean> getType() {return Boolean.class;}
   }
 
-
-
+  /**
+   * The CoreLabel key identifying an entity mention's classification probability.
+   *
+   * This is attached to {@link CoreMap}s.
+   */
+  public static class ProbabilityScoreAnnotation implements CoreAnnotation<Double> {
+    @Override
+    public Class<Double> getType() {
+      return Double.class;
+    }
+  }
 }

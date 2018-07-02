@@ -1235,7 +1235,6 @@ public class CRFClassifier<IN extends CoreMap> extends AbstractSequenceClassifie
     if (flags.inferenceType == null) {
       flags.inferenceType = "Viterbi";
     }
-
     BestSequenceFinder tagInference;
     if (flags.inferenceType.equalsIgnoreCase("Viterbi")) {
       tagInference = new ExactBestSequenceFinder();
@@ -1250,9 +1249,19 @@ public class CRFClassifier<IN extends CoreMap> extends AbstractSequenceClassifie
     if (flags.useReverse) {
       Collections.reverse(document);
     }
+
+    final CRFCliqueTree<String> cliqueTree = getCliqueTree(document);
+
     for (int j = 0, docSize = document.size(); j < docSize; j++) {
       IN wi = document.get(j);
       String guess = classIndex.get(bestSequence[j + windowSize - 1]);
+
+      int index = classIndex.indexOf(guess);
+
+      double probability = cliqueTree.prob(j, index);
+
+      log.debug(wi.toString() + ":" + guess + ":" +probability);
+      wi.set(CoreAnnotations.ProbabilityScoreAnnotation.class, probability);
       wi.set(CoreAnnotations.AnswerAnnotation.class, guess);
     }
     if (flags.useReverse) {

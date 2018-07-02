@@ -455,6 +455,7 @@ public class ClassifierCombiner<IN extends CoreMap & HasWord> extends AbstractSe
     // classify(List<IN>) is supposed to work in place, so add AnswerAnnotation to tokens!
     for (int i = 0, sz = output.size(); i < sz; i++) {
       tokens.get(i).set(CoreAnnotations.AnswerAnnotation.class, output.get(i).get(CoreAnnotations.AnswerAnnotation.class));
+      tokens.get(i).set(CoreAnnotations.ProbabilityScoreAnnotation.class, output.get(i).get(CoreAnnotations.ProbabilityScoreAnnotation.class));
     }
     baseOutputs.add(tokens);
 
